@@ -249,7 +249,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
 
         function addMessage(content, isUser) {
             const messageDiv = document.createElement('div');
-            messageDiv.className = \`message \${isUser ? 'user-message' : 'assistant-message'}\`;
+            messageDiv.className = 'message ' + (isUser ? 'user-message' : 'assistant-message');
             
             const labelDiv = document.createElement('div');
             labelDiv.className = 'message-label';

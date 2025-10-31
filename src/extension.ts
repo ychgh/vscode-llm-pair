@@ -53,7 +53,7 @@ function initializeLLMProvider(chatViewProvider: ChatViewProvider) {
     if (provider === 'openai') {
       const apiKey = config.get<string>('openai.apiKey', '');
       const model = config.get<string>('openai.model', 'gpt-4');
-      const baseUrl = config.get<string>('openai.baseUrl', 'https://api.openai.com/v1');
+      const baseUrl = config.get<string>('openai.baseUrl');
 
       if (!apiKey) {
         vscode.window.showWarningMessage(

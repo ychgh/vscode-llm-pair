@@ -34,9 +34,14 @@ export class OpenAIProvider implements LLMProvider {
       stream: false,
     });
 
+    const choice = response.choices[0];
+    if (!choice) {
+      throw new Error('No choices returned from OpenAI API');
+    }
+
     return {
-      content: response.choices[0]?.message?.content || '',
-      finishReason: response.choices[0]?.finish_reason,
+      content: choice.message?.content || '',
+      finishReason: choice.finish_reason,
     };
   }
 
@@ -53,7 +58,8 @@ export class OpenAIProvider implements LLMProvider {
     });
 
     for await (const chunk of stream) {
-      const content = chunk.choices[0]?.delta?.content;
+      const choice = chunk.choices[0];
+      const content = choice?.delta?.content;
       if (content) {
         onChunk(content);
       }
