@@ -1,0 +1,93 @@
+{
+  "name": "vscode-llm-pair",
+  "displayName": "VS Code LLM Pair",
+  "version": "0.0.1",
+  "description": "VS Code LLM Pair is a powerful Visual Studio Code extension that brings the collaborative power of pair programming directly into your editor, with the flexibility to choose from various Large Language Models as your partner. Seamlessly switch between AI models to find the perfect coding companion for your style and task.",
+  "publisher": "vscode-llm-pair",
+  "type": "module",
+  "engines": {
+    "vscode": "^1.101.0"
+  },
+  "categories": [
+    "AI",
+    "Programming Languages",
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "vscode-llm-pair.openChat",
+        "title": "LLM Pair: Open Chat",
+        "icon": "$(comment-discussion)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "llm-pair-sidebar",
+          "title": "LLM Pair Programming",
+          "icon": "$(robot)"
+        }
+      ]
+    },
+    "views": {
+      "llm-pair-sidebar": [
+        {
+          "type": "webview",
+          "id": "llm-pair-chat",
+          "name": "Chat"
+        }
+      ]
+    },
+    "configuration": {
+      "type": "object",
+      "title": "LLM Pair Configuration",
+      "properties": {
+        "llmPair.provider": {
+          "type": "string",
+          "default": "openai",
+          "enum": ["openai"],
+          "description": "The LLM provider to use"
+        },
+        "llmPair.openai.apiKey": {
+          "type": "string",
+          "description": "OpenAI API key"
+        },
+        "llmPair.openai.model": {
+          "type": "string",
+          "default": "gpt-4",
+          "description": "OpenAI model to use"
+        },
+        "llmPair.openai.baseUrl": {
+          "type": "string",
+          "default": "https://api.openai.com/v1",
+          "description": "OpenAI API base URL"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.101.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@typescript-eslint/eslint-plugin": "^8.31.1",
+    "@typescript-eslint/parser": "^8.31.1",
+    "eslint": "^9.25.1",
+    "typescript": "^5.8.3",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.5.2"
+  },
+  "dependencies": {
+    "openai": "^4.73.0"
+  }
+}
