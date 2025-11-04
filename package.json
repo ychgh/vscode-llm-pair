@@ -24,7 +24,7 @@
       }
     ],
     "viewsContainers": {
-      "panel": [
+      "activitybar": [
         {
           "id": "llm-pair-sidebar",
           "title": "LLM Pair Programming",
