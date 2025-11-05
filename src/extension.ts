@@ -3,13 +3,21 @@ import { ChatViewProvider } from './chatView.js';
 import { OpenAIProvider } from './providers/index.js';
 
 /**
+ * Shared output channel for the extension
+ */
+let outputChannel: vscode.OutputChannel | undefined;
+
+/**
  * Extension activation function
  */
 export function activate(context: vscode.ExtensionContext) {
-  console.log('LLM Pair extension is now active');
+  // Create a dedicated output channel
+  outputChannel = vscode.window.createOutputChannel('LLM Pair');
+  context.subscriptions.push(outputChannel);
+  outputChannel.appendLine('LLM Pair extension is now active');
 
-  // Create the chat view provider
-  const chatViewProvider = new ChatViewProvider(context.extensionUri);
+  // Create the chat view provider with the output channel
+  const chatViewProvider = new ChatViewProvider(context.extensionUri, outputChannel);
 
   // Register the webview view provider
   context.subscriptions.push(
@@ -26,6 +34,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration('llmPair')) {
+        outputChannel?.appendLine('Configuration changed, reinitializing LLM provider');
         initializeLLMProvider(chatViewProvider);
       }
     })
@@ -59,6 +68,7 @@ function initializeLLMProvider(chatViewProvider: ChatViewProvider) {
         vscode.window.showWarningMessage(
           'OpenAI API key not configured. Please set llmPair.openai.apiKey in settings.'
         );
+        outputChannel?.appendLine('OpenAI API key not configured.');
         return;
       }
 
@@ -69,12 +79,16 @@ function initializeLLMProvider(chatViewProvider: ChatViewProvider) {
       });
 
       chatViewProvider.setProvider(openaiProvider);
-      console.log(`LLM Provider initialized: OpenAI (${model})`);
+      outputChannel?.appendLine(`LLM Provider initialized: OpenAI (${model})`);
+    } else {
+      outputChannel?.appendLine(`Unsupported provider: ${provider}`);
     }
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
     vscode.window.showErrorMessage(
-      `Failed to initialize LLM provider: ${error instanceof Error ? error.message : 'Unknown error'}`
+      `Failed to initialize LLM provider: ${message}`
     );
+    outputChannel?.appendLine(`Failed to initialize LLM provider: ${message}`);
   }
 }
 
@@ -82,5 +96,5 @@ function initializeLLMProvider(chatViewProvider: ChatViewProvider) {
  * Extension deactivation function
  */
 export function deactivate() {
-  console.log('LLM Pair extension is now deactivated');
+  outputChannel?.appendLine('LLM Pair extension is now deactivated');
 }
