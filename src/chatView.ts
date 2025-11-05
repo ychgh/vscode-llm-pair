@@ -13,10 +13,12 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
 
   constructor(
     private readonly _extensionUri: vscode.Uri,
+    private readonly _output: vscode.OutputChannel | undefined,
   ) {}
 
   public setProvider(provider: LLMProvider) {
     this._provider = provider;
+    this._output?.appendLine('ChatViewProvider: LLM provider set.');
   }
 
   public resolveWebviewView(
@@ -32,15 +34,21 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     };
 
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
+    this._output?.appendLine('ChatViewProvider: webview resolved.');
 
     // Handle messages from the webview
     webviewView.webview.onDidReceiveMessage(async (data) => {
+      this._output?.appendLine(`ChatViewProvider: message received from webview: ${data?.type ?? 'unknown'}`);
       switch (data.type) {
         case 'sendMessage':
           await this._handleUserMessage(data.message);
           break;
         case 'clearChat':
           this._conversationHistory = [];
+          this._output?.appendLine('ChatViewProvider: chat cleared.');
+          break;
+        default:
+          this._output?.appendLine(`ChatViewProvider: unrecognized message type: ${data.type}`);
           break;
       }
     });
@@ -49,10 +57,12 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   private async _handleUserMessage(message: string) {
     if (!this._provider) {
       vscode.window.showErrorMessage('No LLM provider configured');
+      this._output?.appendLine('ChatViewProvider: sendMessage failed - no provider configured.');
       return;
     }
 
     if (!this._view) {
+      this._output?.appendLine('ChatViewProvider: sendMessage ignored - no webview.');
       return;
     }
 
@@ -61,6 +71,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       role: 'user',
       content: message,
     });
+    this._output?.appendLine(`ChatViewProvider: user message queued (${message.length} chars).`);
 
     // Send user message to webview
     this._view.webview.postMessage({
@@ -74,6 +85,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     });
 
     let fullResponse = '';
+    this._output?.appendLine('ChatViewProvider: starting assistant stream...');
 
     try {
       await this._provider.streamChatCompletion(
@@ -81,7 +93,8 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
           messages: [
             {
               role: 'system',
-              content: 'You are a helpful AI pair programming assistant. Help the user with their coding tasks, provide suggestions, explain code, and assist with debugging.',
+              content:
+                'You are a helpful AI pair programming assistant. Help the user with their coding tasks, provide suggestions, explain code, and assist with debugging.',
             },
             ...this._conversationHistory,
           ],
@@ -92,6 +105,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
             type: 'assistantChunk',
             chunk: chunk,
           });
+          this._output?.appendLine(`ChatViewProvider: assistant chunk (${chunk.length} chars).`);
         }
       );
 
@@ -105,11 +119,15 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       this._view.webview.postMessage({
         type: 'assistantComplete',
       });
+      this._output?.appendLine('ChatViewProvider: assistant response complete.');
     } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'An error occurred';
       this._view.webview.postMessage({
         type: 'error',
-        message: error instanceof Error ? error.message : 'An error occurred',
+        message,
       });
+      this._output?.appendLine(`ChatViewProvider: error during streaming - ${message}`);
     }
   }
 
