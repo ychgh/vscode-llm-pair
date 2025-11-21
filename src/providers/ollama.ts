@@ -98,60 +98,67 @@ export class OllamaProvider implements LLMProvider {
     options: ChatCompletionOptions,
     onChunk: (chunk: string) => void
   ): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/api/chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: this.model,
-        messages: options.messages.map(msg => ({
-          role: msg.role,
-          content: msg.content,
-        })),
-        stream: true,
-        options: {
-          temperature: options.temperature ?? 0.7,
-        },
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Ollama API error: ${response.statusText}`);
-    }
-
-    if (!response.body) {
-      throw new Error('Response body is null');
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-
     try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-          break;
-        }
+      const response = await fetch(`${this.baseUrl}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: this.model,
+          messages: options.messages.map(msg => ({
+            role: msg.role,
+            content: msg.content,
+          })),
+          stream: true,
+          options: {
+            temperature: options.temperature ?? 0.7,
+          },
+        }),
+      });
 
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n').filter(line => line.trim());
+      if (!response.ok) {
+        throw new Error(`Ollama API error: ${response.statusText}`);
+      }
 
-        for (const line of lines) {
-          try {
-            const data = JSON.parse(line);
-            if (data.message?.content) {
-              onChunk(data.message.content);
+      if (!response.body) {
+        throw new Error('Response body is null');
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            break;
+          }
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n').filter(line => line.trim());
+
+          for (const line of lines) {
+            try {
+              const data = JSON.parse(line);
+              if (data.message?.content) {
+                onChunk(data.message.content);
+              }
+            } catch (parseError) {
+              // Log parse errors for debugging but continue processing
+              // This can happen with incomplete JSON chunks at stream boundaries
+              console.debug('Failed to parse streaming chunk:', parseError);
             }
-          } catch (parseError) {
-            // Log parse errors for debugging but continue processing
-            // This can happen with incomplete JSON chunks at stream boundaries
-            console.debug('Failed to parse streaming chunk:', parseError);
           }
         }
+      } finally {
+        reader.releaseLock();
       }
-    } finally {
-      reader.releaseLock();
+    } catch (error) {
+      if (error instanceof TypeError) {
+        throw new Error('Failed to connect to Ollama. Please ensure Ollama is running.');
+      }
+      throw error;
     }
   }
 
