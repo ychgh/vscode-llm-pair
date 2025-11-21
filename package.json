@@ -24,11 +24,13 @@
       },
       {
         "command": "vscode-llm-pair.selectProvider",
-        "title": "LLM Pair: Select Provider"
+        "title": "LLM Pair: Select Provider",
+        "icon": "$(server)"
       },
       {
         "command": "vscode-llm-pair.browseModels",
-        "title": "LLM Pair: Browse Models"
+        "title": "LLM Pair: Browse Models",
+        "icon": "$(library)"
       }
     ],
     "viewsContainers": {
