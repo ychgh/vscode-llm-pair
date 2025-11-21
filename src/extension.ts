@@ -10,7 +10,7 @@ let outputChannel: vscode.OutputChannel | undefined;
 /**
  * Extension activation function
  */
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
   // Create a dedicated output channel
   outputChannel = vscode.window.createOutputChannel('LLM Pair');
   context.subscriptions.push(outputChannel);
@@ -28,14 +28,14 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   // Initialize the LLM provider
-  initializeLLMProvider(chatViewProvider);
+  await initializeLLMProvider(chatViewProvider);
 
   // Watch for configuration changes
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration('llmPair')) {
         outputChannel?.appendLine('Configuration changed, reinitializing LLM provider');
-        initializeLLMProvider(chatViewProvider);
+        void initializeLLMProvider(chatViewProvider);
       }
     })
   );

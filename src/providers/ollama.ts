@@ -50,7 +50,7 @@ export class OllamaProvider implements LLMProvider {
       const data = await response.json() as OllamaTagsResponse;
       return data.models.map(m => m.name);
     } catch (error) {
-      if (error instanceof Error && error.message.includes('fetch')) {
+      if (error instanceof TypeError) {
         throw new Error('Failed to connect to Ollama. Please ensure Ollama is running.');
       }
       throw error;
@@ -136,8 +136,10 @@ export class OllamaProvider implements LLMProvider {
             if (data.message?.content) {
               onChunk(data.message.content);
             }
-          } catch (e) {
-            // Ignore parsing errors for incomplete JSON chunks
+          } catch (parseError) {
+            // Log parse errors for debugging but continue processing
+            // This can happen with incomplete JSON chunks at stream boundaries
+            console.debug('Failed to parse streaming chunk:', parseError);
           }
         }
       }
