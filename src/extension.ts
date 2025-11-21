@@ -190,7 +190,7 @@ async function selectProvider(chatViewProvider: ChatViewProvider) {
 /**
  * Browse and select models for the current provider
  */
-async function browseModels(chatViewProvider: ChatViewProvider) {
+async function browseModels() {
   const config = vscode.workspace.getConfiguration();
   const provider = config.get<string>('llmPair.provider', 'openai');
 
