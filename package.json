@@ -42,28 +42,32 @@
       ]
     },
     "configuration": {
-      "type": "object",
       "title": "LLM Pair Configuration",
       "properties": {
         "llmPair.provider": {
           "type": "string",
           "default": "openai",
           "enum": ["openai"],
-          "description": "The LLM provider to use"
+          "description": "The LLM provider to use",
+          "scope": "window"
         },
         "llmPair.openai.apiKey": {
           "type": "string",
-          "description": "OpenAI API key"
+          "default": "",
+          "description": "OpenAI API key",
+          "scope": "window"
         },
         "llmPair.openai.model": {
           "type": "string",
           "default": "gpt-4",
-          "description": "OpenAI model to use"
+          "description": "OpenAI model to use",
+          "scope": "window"
         },
         "llmPair.openai.baseUrl": {
           "type": "string",
           "default": "https://api.openai.com/v1",
-          "description": "OpenAI API base URL"
+          "description": "OpenAI API base URL",
+          "scope": "window"
         }
       }
     }

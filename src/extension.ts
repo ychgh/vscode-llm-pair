@@ -55,14 +55,39 @@ export function activate(context: vscode.ExtensionContext) {
  * Initialize the LLM provider based on configuration
  */
 function initializeLLMProvider(chatViewProvider: ChatViewProvider) {
-  const config = vscode.workspace.getConfiguration('llmPair');
-  const provider = config.get<string>('provider', 'openai');
+  const config = vscode.workspace.getConfiguration();
+  const provider = config.get<string>('llmPair.provider', 'openai');
+
+  outputChannel?.appendLine('=== Configuration Debug ===');
+  outputChannel?.appendLine(`Workspace folders: ${JSON.stringify(vscode.workspace.workspaceFolders?.map(f => f.uri.fsPath))}`);
+  outputChannel?.appendLine(`Provider: ${provider}`);
+  outputChannel?.appendLine(`Config inspection for 'llmPair.provider': ${JSON.stringify(config.inspect('llmPair.provider'))}`);
+  outputChannel?.appendLine(`Environment variable VSCODE_LLMPAIR_OPENAI_APIKEY: ${process.env.VSCODE_LLMPAIR_OPENAI_APIKEY ? '[SET]' : '[NOT SET]'}`);
 
   try {
     if (provider === 'openai') {
-      const apiKey = config.get<string>('openai.apiKey', '');
-      const model = config.get<string>('openai.model', 'gpt-4');
-      const baseUrl = config.get<string>('openai.baseUrl');
+      // Try config first, then fall back to environment variable for development
+      let apiKey = config.get<string>('llmPair.openai.apiKey');
+      
+      outputChannel?.appendLine(`API Key from config.get: ${apiKey ? (apiKey === 'update your api-key here' ? '[DEFAULT]' : '[SET]') : '[NOT SET]'}`);
+      
+      // Fallback to environment variable if not set in config (for development)
+      if (!apiKey || apiKey === 'update your api-key here' || apiKey.trim() === '') {
+        apiKey = process.env.VSCODE_LLMPAIR_OPENAI_APIKEY;
+        if (apiKey) {
+          outputChannel?.appendLine('✓ Using API key from environment variable');
+        }
+      } else {
+        outputChannel?.appendLine('✓ Using API key from settings.json');
+      }
+      
+      const model = config.get<string>('llmPair.openai.model', 'gpt-4');
+      const baseUrl = config.get<string>('llmPair.openai.baseUrl');
+      
+      outputChannel?.appendLine(`API Key inspection: ${JSON.stringify(config.inspect('llmPair.openai.apiKey'))}`);
+      outputChannel?.appendLine(`Model inspection: ${JSON.stringify(config.inspect('llmPair.openai.model'))}`);
+      outputChannel?.appendLine(`BaseUrl inspection: ${JSON.stringify(config.inspect('llmPair.openai.baseUrl'))}`);
+      outputChannel?.appendLine(`Final config: apiKey=${apiKey ? '[SET]' : '[NOT SET]'}, model=${model}, baseUrl=${baseUrl || '[DEFAULT]'}`);
 
       if (!apiKey) {
         vscode.window.showWarningMessage(

@@ -85,6 +85,12 @@ dist
 # VS Code extension build output
 out
 
+# Test workspace for development
+test-workspace/
+
+# Local launch configuration with secrets
+.vscode/launch.local.json
+
 # Gatsby files
 .cache/
 # Comment in the public line in if your project uses Gatsby and not Next.js
