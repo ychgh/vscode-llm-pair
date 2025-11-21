@@ -21,6 +21,14 @@
         "command": "vscode-llm-pair.openChat",
         "title": "LLM Pair: Open Chat",
         "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "vscode-llm-pair.selectProvider",
+        "title": "LLM Pair: Select Provider"
+      },
+      {
+        "command": "vscode-llm-pair.browseModels",
+        "title": "LLM Pair: Browse Models"
       }
     ],
     "viewsContainers": {
@@ -41,13 +49,27 @@
         }
       ]
     },
+    "menus": {
+      "view/title": [
+        {
+          "command": "vscode-llm-pair.selectProvider",
+          "when": "view == llm-pair-chat",
+          "group": "navigation@1"
+        },
+        {
+          "command": "vscode-llm-pair.browseModels",
+          "when": "view == llm-pair-chat",
+          "group": "navigation@2"
+        }
+      ]
+    },
     "configuration": {
       "title": "LLM Pair Configuration",
       "properties": {
         "llmPair.provider": {
           "type": "string",
           "default": "openai",
-          "enum": ["openai"],
+          "enum": ["openai", "ollama"],
           "description": "The LLM provider to use",
           "scope": "window"
         },
@@ -67,6 +89,18 @@
           "type": "string",
           "default": "https://api.openai.com/v1",
           "description": "OpenAI API base URL",
+          "scope": "window"
+        },
+        "llmPair.ollama.baseUrl": {
+          "type": "string",
+          "default": "http://localhost:11434",
+          "description": "Ollama server base URL",
+          "scope": "window"
+        },
+        "llmPair.ollama.model": {
+          "type": "string",
+          "default": "codellama:latest",
+          "description": "Ollama model to use",
           "scope": "window"
         }
       }

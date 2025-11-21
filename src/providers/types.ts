@@ -45,4 +45,9 @@ export interface LLMProvider {
    * Get the provider name
    */
   getProviderName(): string;
+
+  /**
+   * Get the model name
+   */
+  getModel?(): string;
 }
