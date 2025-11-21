@@ -18,7 +18,7 @@ VS Code LLM Pair is a powerful Visual Studio Code extension that brings the coll
 - Visual Studio Code v1.101.0 or higher
 - Node.js 20.x or higher
 - **For OpenAI**: An OpenAI API key
-- **For Ollama** (optional): Ollama installed locally ([https://ollama.ai](https://ollama.ai))
+- **For Ollama** (optional): Ollama installed locally ([https://ollama.com](https://ollama.com))
 
 ### Installation
 
