@@ -58,33 +58,40 @@ export class OllamaProvider implements LLMProvider {
   }
 
   async generateChatCompletion(options: ChatCompletionOptions): Promise<ChatCompletionResponse> {
-    const response = await fetch(`${this.baseUrl}/api/chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: this.model,
-        messages: options.messages.map(msg => ({
-          role: msg.role,
-          content: msg.content,
-        })),
-        stream: false,
-        options: {
-          temperature: options.temperature ?? 0.7,
+    try {
+      const response = await fetch(`${this.baseUrl}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      }),
-    });
+        body: JSON.stringify({
+          model: this.model,
+          messages: options.messages.map(msg => ({
+            role: msg.role,
+            content: msg.content,
+          })),
+          stream: false,
+          options: {
+            temperature: options.temperature ?? 0.7,
+          },
+        }),
+      });
 
-    if (!response.ok) {
-      throw new Error(`Ollama API error: ${response.statusText}`);
+      if (!response.ok) {
+        throw new Error(`Ollama API error: ${response.statusText}`);
+      }
+
+      const data = await response.json() as { message?: { content?: string }; done?: boolean };
+      return {
+        content: data.message?.content || '',
+        finishReason: data.done ? 'stop' : undefined,
+      };
+    } catch (error) {
+      if (error instanceof TypeError) {
+        throw new Error('Failed to connect to Ollama. Please ensure Ollama is running.');
+      }
+      throw error;
     }
-
-    const data = await response.json() as { message?: { content?: string }; done?: boolean };
-    return {
-      content: data.message?.content || '',
-      finishReason: data.done ? 'stop' : undefined,
-    };
   }
 
   async streamChatCompletion(
