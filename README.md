@@ -4,10 +4,11 @@ VS Code LLM Pair is a powerful Visual Studio Code extension that brings the coll
 
 ## Features
 
-- 🤖 **Multi-LLM Support**: Currently supports OpenAI (GPT-4, GPT-3.5, etc.)
+- 🤖 **Multi-LLM Support**: Supports OpenAI (GPT-4, GPT-3.5, etc.) and Ollama (local models)
 - 💬 **Sidebar Chat Interface**: Interactive chat panel in the VS Code sidebar
 - 🔄 **Streaming Responses**: Real-time streaming of AI responses
 - 📝 **Conversation History**: Maintains context across multiple messages
+- 🔀 **Easy Provider Switching**: Quick-switch between LLM providers and models via context menu
 - ⚙️ **Configurable**: Customize API endpoints, models, and API keys
 
 ## Getting Started
@@ -16,7 +17,8 @@ VS Code LLM Pair is a powerful Visual Studio Code extension that brings the coll
 
 - Visual Studio Code v1.101.0 or higher
 - Node.js 20.x or higher
-- An OpenAI API key
+- **For OpenAI**: An OpenAI API key
+- **For Ollama** (optional): Ollama installed locally ([https://ollama.com](https://ollama.com))
 
 ### Installation
 
@@ -44,6 +46,8 @@ VS Code LLM Pair is a powerful Visual Studio Code extension that brings the coll
 
 Configure the extension by adding the following settings to your VS Code settings (File > Preferences > Settings or `Ctrl+,`):
 
+#### OpenAI Configuration
+
 ```json
 {
   "llmPair.provider": "openai",
@@ -53,12 +57,44 @@ Configure the extension by adding the following settings to your VS Code setting
 }
 ```
 
+#### Ollama Configuration
+
+First, install Ollama from [https://ollama.com](https://ollama.com) and pull a model:
+
+```bash
+# Install Ollama (see https://ollama.com for instructions)
+
+# Pull a model
+ollama pull codellama:latest
+# or
+ollama pull llama2:latest
+# or
+ollama pull mistral:latest
+```
+
+Then configure the extension:
+
+```json
+{
+  "llmPair.provider": "ollama",
+  "llmPair.ollama.baseUrl": "http://localhost:11434",
+  "llmPair.ollama.model": "codellama:latest"
+}
+```
+
 #### Configuration Options
 
-- `llmPair.provider`: The LLM provider to use (currently only `"openai"` is supported)
-- `llmPair.openai.apiKey`: Your OpenAI API key (required)
+**General:**
+- `llmPair.provider`: The LLM provider to use (`"openai"` or `"ollama"`)
+
+**OpenAI:**
+- `llmPair.openai.apiKey`: Your OpenAI API key (required for OpenAI)
 - `llmPair.openai.model`: The OpenAI model to use (default: `"gpt-4"`)
-- `llmPair.openai.baseUrl`: The OpenAI API base URL (optional, defaults to OpenAI's official endpoint)
+- `llmPair.openai.baseUrl`: The OpenAI API base URL (optional)
+
+**Ollama:**
+- `llmPair.ollama.baseUrl`: Ollama server URL (default: `"http://localhost:11434"`)
+- `llmPair.ollama.model`: The Ollama model to use (default: `"codellama:latest"`)
 
 ## Usage
 
@@ -69,6 +105,26 @@ Configure the extension by adding the following settings to your VS Code setting
    ```
    LLM Pair: Open Chat
    ```
+
+### Switching Providers and Models
+
+The extension provides convenient commands to switch between providers and models:
+
+1. **Select Provider**: Use the command palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and run:
+   ```
+   LLM Pair: Select Provider
+   ```
+   This allows you to quickly switch between OpenAI and Ollama.
+
+2. **Browse Models**: Use the command palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and run:
+   ```
+   LLM Pair: Browse Models
+   ```
+   This shows available models for your current provider:
+   - **For Ollama**: Lists all locally available models
+   - **For OpenAI**: Lists common OpenAI models
+
+These commands are also available via buttons in the chat panel's title bar.
 
 ### Using the Chat
 
@@ -128,7 +184,9 @@ npm run test
 
 Future enhancements planned for this extension:
 
-- [ ] Additional LLM providers (Anthropic Claude, local models, etc.)
+- [x] Additional LLM providers (Ollama for local models)
+- [x] Context menu for quick provider and model switching
+- [ ] Additional cloud providers (Anthropic Claude, Google Gemini, etc.)
 - [ ] Code insertion directly into the editor
 - [ ] Multi-file context awareness
 - [ ] Custom system prompts

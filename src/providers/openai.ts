@@ -69,4 +69,8 @@ export class OpenAIProvider implements LLMProvider {
   getProviderName(): string {
     return 'OpenAI';
   }
+
+  getModel(): string {
+    return this.model;
+  }
 }
