@@ -160,8 +160,13 @@ async function initializeLLMProvider(chatViewProvider: ChatViewProvider) {
  * Select LLM provider via quick pick
  */
 async function selectProvider() {
+  outputChannel?.appendLine('=== selectProvider called ===');
+  
   const config = vscode.workspace.getConfiguration('llmPair');
   const currentProvider = config.get<string>('provider', 'openai');
+  
+  outputChannel?.appendLine(`Current provider from config: ${currentProvider}`);
+  outputChannel?.appendLine(`Config inspection: ${JSON.stringify(config.inspect('provider'))}`);
 
   const providers = [
     {
@@ -176,14 +181,25 @@ async function selectProvider() {
     },
   ];
 
+  outputChannel?.appendLine(`Showing provider menu with current selection: ${currentProvider}`);
+
   const selected = await vscode.window.showQuickPick(providers, {
     placeHolder: 'Select LLM Provider',
     title: 'LLM Provider Selection',
   });
 
-  if (selected && selected.value !== currentProvider) {
-    await config.update('provider', selected.value, vscode.ConfigurationTarget.Global);
-    vscode.window.showInformationMessage(`Provider switched to ${selected.label}`);
+  if (selected) {
+    outputChannel?.appendLine(`User selected: ${selected.value}`);
+    if (selected.value !== currentProvider) {
+      outputChannel?.appendLine(`Updating provider from ${currentProvider} to ${selected.value}`);
+      await config.update('provider', selected.value, vscode.ConfigurationTarget.Global);
+      outputChannel?.appendLine(`Provider updated successfully`);
+      vscode.window.showInformationMessage(`Provider switched to ${selected.label}`);
+    } else {
+      outputChannel?.appendLine(`No change needed, provider is already ${currentProvider}`);
+    }
+  } else {
+    outputChannel?.appendLine(`User cancelled provider selection`);
   }
 }
 
@@ -191,14 +207,22 @@ async function selectProvider() {
  * Browse and select models for the current provider
  */
 async function browseModels() {
+  outputChannel?.appendLine('=== browseModels called ===');
+  
   const config = vscode.workspace.getConfiguration('llmPair');
   const provider = config.get<string>('provider', 'openai');
+  
+  outputChannel?.appendLine(`Current provider from config: ${provider}`);
+  outputChannel?.appendLine(`Config inspection: ${JSON.stringify(config.inspect('provider'))}`);
 
   if (provider === 'ollama') {
+    outputChannel?.appendLine(`Browsing Ollama models`);
     await browseOllamaModels();
   } else if (provider === 'openai') {
+    outputChannel?.appendLine(`Browsing OpenAI models`);
     await browseOpenAIModels();
   } else {
+    outputChannel?.appendLine(`Unsupported provider: ${provider}`);
     vscode.window.showWarningMessage(`Model browsing not supported for provider: ${provider}`);
   }
 }
