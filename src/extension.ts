@@ -71,19 +71,19 @@ export async function activate(context: vscode.ExtensionContext) {
  * Initialize the LLM provider based on configuration
  */
 async function initializeLLMProvider(chatViewProvider: ChatViewProvider) {
-  const config = vscode.workspace.getConfiguration();
-  const provider = config.get<string>('llmPair.provider', 'openai');
+  const config = vscode.workspace.getConfiguration('llmPair');
+  const provider = config.get<string>('provider', 'openai');
 
   outputChannel?.appendLine('=== Configuration Debug ===');
   outputChannel?.appendLine(`Workspace folders: ${JSON.stringify(vscode.workspace.workspaceFolders?.map(f => f.uri.fsPath))}`);
   outputChannel?.appendLine(`Provider: ${provider}`);
-  outputChannel?.appendLine(`Config inspection for 'llmPair.provider': ${JSON.stringify(config.inspect('llmPair.provider'))}`);
+  outputChannel?.appendLine(`Config inspection for 'llmPair.provider': ${JSON.stringify(config.inspect('provider'))}`);
   outputChannel?.appendLine(`Environment variable VSCODE_LLMPAIR_OPENAI_APIKEY: ${process.env.VSCODE_LLMPAIR_OPENAI_APIKEY ? '[SET]' : '[NOT SET]'}`);
 
   try {
     if (provider === 'openai') {
       // Try config first, then fall back to environment variable for development
-      let apiKey = config.get<string>('llmPair.openai.apiKey');
+      let apiKey = config.get<string>('openai.apiKey');
       
       outputChannel?.appendLine(`API Key from config.get: ${apiKey ? (apiKey === 'update your api-key here' ? '[DEFAULT]' : '[SET]') : '[NOT SET]'}`);
       
@@ -97,12 +97,12 @@ async function initializeLLMProvider(chatViewProvider: ChatViewProvider) {
         outputChannel?.appendLine('✓ Using API key from settings.json');
       }
       
-      const model = config.get<string>('llmPair.openai.model', 'gpt-4');
-      const baseUrl = config.get<string>('llmPair.openai.baseUrl');
+      const model = config.get<string>('openai.model', 'gpt-4');
+      const baseUrl = config.get<string>('openai.baseUrl');
       
-      outputChannel?.appendLine(`API Key inspection: ${JSON.stringify(config.inspect('llmPair.openai.apiKey'))}`);
-      outputChannel?.appendLine(`Model inspection: ${JSON.stringify(config.inspect('llmPair.openai.model'))}`);
-      outputChannel?.appendLine(`BaseUrl inspection: ${JSON.stringify(config.inspect('llmPair.openai.baseUrl'))}`);
+      outputChannel?.appendLine(`API Key inspection: ${JSON.stringify(config.inspect('openai.apiKey'))}`);
+      outputChannel?.appendLine(`Model inspection: ${JSON.stringify(config.inspect('openai.model'))}`);
+      outputChannel?.appendLine(`BaseUrl inspection: ${JSON.stringify(config.inspect('openai.baseUrl'))}`);
       outputChannel?.appendLine(`Final config: apiKey=${apiKey ? '[SET]' : '[NOT SET]'}, model=${model}, baseUrl=${baseUrl || '[DEFAULT]'}`);
 
       if (!apiKey) {
@@ -122,8 +122,8 @@ async function initializeLLMProvider(chatViewProvider: ChatViewProvider) {
       chatViewProvider.setProvider(openaiProvider);
       outputChannel?.appendLine(`LLM Provider initialized: OpenAI (${model})`);
     } else if (provider === 'ollama') {
-      const baseUrl = config.get<string>('llmPair.ollama.baseUrl', 'http://localhost:11434');
-      const model = config.get<string>('llmPair.ollama.model', 'codellama:latest');
+      const baseUrl = config.get<string>('ollama.baseUrl', 'http://localhost:11434');
+      const model = config.get<string>('ollama.model', 'codellama:latest');
 
       outputChannel?.appendLine(`Ollama config: baseUrl=${baseUrl}, model=${model}`);
 
