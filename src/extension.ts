@@ -192,8 +192,25 @@ async function selectProvider() {
     outputChannel?.appendLine(`User selected: ${selected.value}`);
     if (selected.value !== currentProvider) {
       outputChannel?.appendLine(`Updating provider from ${currentProvider} to ${selected.value}`);
-      await config.update('provider', selected.value, vscode.ConfigurationTarget.Global);
-      outputChannel?.appendLine(`Provider updated successfully`);
+      
+      // Determine the appropriate configuration target
+      const inspection = config.inspect<string>('provider');
+      let targetScope = vscode.ConfigurationTarget.Global;
+      
+      // If there's a workspace value set, update the workspace configuration
+      // Otherwise, update the global configuration
+      if (inspection?.workspaceValue !== undefined) {
+        targetScope = vscode.ConfigurationTarget.Workspace;
+        outputChannel?.appendLine(`Updating workspace configuration (workspace value exists)`);
+      } else if (inspection?.workspaceFolderValue !== undefined) {
+        targetScope = vscode.ConfigurationTarget.WorkspaceFolder;
+        outputChannel?.appendLine(`Updating workspace folder configuration (workspace folder value exists)`);
+      } else {
+        outputChannel?.appendLine(`Updating global configuration`);
+      }
+      
+      await config.update('provider', selected.value, targetScope);
+      outputChannel?.appendLine(`Provider updated successfully to ${selected.value} in ${targetScope === vscode.ConfigurationTarget.Global ? 'global' : targetScope === vscode.ConfigurationTarget.Workspace ? 'workspace' : 'workspace folder'} scope`);
       vscode.window.showInformationMessage(`Provider switched to ${selected.label}`);
     } else {
       outputChannel?.appendLine(`No change needed, provider is already ${currentProvider}`);
@@ -257,7 +274,17 @@ async function browseOllamaModels() {
     });
 
     if (selected && selected.label !== currentModel) {
-      await config.update('ollama.model', selected.label, vscode.ConfigurationTarget.Global);
+      // Determine the appropriate configuration target
+      const inspection = config.inspect<string>('ollama.model');
+      let targetScope = vscode.ConfigurationTarget.Global;
+      
+      if (inspection?.workspaceValue !== undefined) {
+        targetScope = vscode.ConfigurationTarget.Workspace;
+      } else if (inspection?.workspaceFolderValue !== undefined) {
+        targetScope = vscode.ConfigurationTarget.WorkspaceFolder;
+      }
+      
+      await config.update('ollama.model', selected.label, targetScope);
       vscode.window.showInformationMessage(`Model switched to ${selected.label}`);
     }
   } catch (error) {
@@ -294,7 +321,17 @@ async function browseOpenAIModels() {
   });
 
   if (selected && selected.label !== currentModel) {
-    await config.update('openai.model', selected.label, vscode.ConfigurationTarget.Global);
+    // Determine the appropriate configuration target
+    const inspection = config.inspect<string>('openai.model');
+    let targetScope = vscode.ConfigurationTarget.Global;
+    
+    if (inspection?.workspaceValue !== undefined) {
+      targetScope = vscode.ConfigurationTarget.Workspace;
+    } else if (inspection?.workspaceFolderValue !== undefined) {
+      targetScope = vscode.ConfigurationTarget.WorkspaceFolder;
+    }
+    
+    await config.update('openai.model', selected.label, targetScope);
     vscode.window.showInformationMessage(`Model switched to ${selected.label}`);
   }
 }
