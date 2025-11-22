@@ -52,7 +52,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const selectProviderCommand = vscode.commands.registerCommand(
     'vscode-llm-pair.selectProvider',
     async () => {
-      await selectProvider(chatViewProvider);
+      await selectProvider();
     }
   );
 
@@ -60,7 +60,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const browseModelsCommand = vscode.commands.registerCommand(
     'vscode-llm-pair.browseModels',
     async () => {
-      await browseModels(chatViewProvider);
+      await browseModels();
     }
   );
 
@@ -159,7 +159,7 @@ async function initializeLLMProvider(chatViewProvider: ChatViewProvider) {
 /**
  * Select LLM provider via quick pick
  */
-async function selectProvider(chatViewProvider: ChatViewProvider) {
+async function selectProvider() {
   const config = vscode.workspace.getConfiguration();
   const currentProvider = config.get<string>('llmPair.provider', 'openai');
 
@@ -172,7 +172,7 @@ async function selectProvider(chatViewProvider: ChatViewProvider) {
     {
       label: 'Ollama',
       value: 'ollama',
-      description: currentProvider === 'ollama' ? '$(check) Currently selected' : 'Local models',
+      description: currentProvider === 'ollama' ? '$(check) Currently selected - Local models' : 'Local models',
     },
   ];
 

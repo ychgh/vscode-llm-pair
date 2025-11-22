@@ -59,10 +59,10 @@ Configure the extension by adding the following settings to your VS Code setting
 
 #### Ollama Configuration
 
-First, install Ollama from [https://ollama.ai](https://ollama.ai) and pull a model:
+First, install Ollama from [https://ollama.com](https://ollama.com) and pull a model:
 
 ```bash
-# Install Ollama (see https://ollama.ai for instructions)
+# Install Ollama (see https://ollama.com for instructions)
 
 # Pull a model
 ollama pull codellama:latest

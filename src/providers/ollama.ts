@@ -127,6 +127,7 @@ export class OllamaProvider implements LLMProvider {
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
+      let buffer = '';
 
       try {
         while (true) {
@@ -136,9 +137,15 @@ export class OllamaProvider implements LLMProvider {
           }
 
           const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n').filter(line => line.trim());
+          buffer += chunk;
+          const lines = buffer.split('\n');
+          // Keep the last potentially incomplete line in the buffer
+          buffer = lines.pop() || '';
 
           for (const line of lines) {
+            if (!line.trim()) {
+              continue;
+            }
             try {
               const data = JSON.parse(line);
               if (data.message?.content) {
