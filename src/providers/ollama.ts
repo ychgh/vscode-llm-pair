@@ -133,6 +133,17 @@ export class OllamaProvider implements LLMProvider {
         while (true) {
           const { done, value } = await reader.read();
           if (done) {
+            // Process any remaining data in the buffer
+            if (buffer.trim()) {
+              try {
+                const data = JSON.parse(buffer);
+                if (data.message?.content) {
+                  onChunk(data.message.content);
+                }
+              } catch (parseError) {
+                console.debug('Failed to parse final streaming chunk:', parseError);
+              }
+            }
             break;
           }
 
