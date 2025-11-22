@@ -77,7 +77,7 @@ async function initializeLLMProvider(chatViewProvider: ChatViewProvider) {
   outputChannel?.appendLine('=== Configuration Debug ===');
   outputChannel?.appendLine(`Workspace folders: ${JSON.stringify(vscode.workspace.workspaceFolders?.map(f => f.uri.fsPath))}`);
   outputChannel?.appendLine(`Provider: ${provider}`);
-  outputChannel?.appendLine(`Config inspection for 'llmPair.provider': ${JSON.stringify(config.inspect('provider'))}`);
+  outputChannel?.appendLine(`Config inspection for 'provider': ${JSON.stringify(config.inspect('provider'))}`);
   outputChannel?.appendLine(`Environment variable VSCODE_LLMPAIR_OPENAI_APIKEY: ${process.env.VSCODE_LLMPAIR_OPENAI_APIKEY ? '[SET]' : '[NOT SET]'}`);
 
   try {
