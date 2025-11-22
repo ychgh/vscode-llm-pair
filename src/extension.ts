@@ -160,8 +160,8 @@ async function initializeLLMProvider(chatViewProvider: ChatViewProvider) {
  * Select LLM provider via quick pick
  */
 async function selectProvider() {
-  const config = vscode.workspace.getConfiguration();
-  const currentProvider = config.get<string>('llmPair.provider', 'openai');
+  const config = vscode.workspace.getConfiguration('llmPair');
+  const currentProvider = config.get<string>('provider', 'openai');
 
   const providers = [
     {
@@ -182,7 +182,7 @@ async function selectProvider() {
   });
 
   if (selected && selected.value !== currentProvider) {
-    await config.update('llmPair.provider', selected.value, vscode.ConfigurationTarget.Global);
+    await config.update('provider', selected.value, vscode.ConfigurationTarget.Global);
     vscode.window.showInformationMessage(`Provider switched to ${selected.label}`);
   }
 }
@@ -191,8 +191,8 @@ async function selectProvider() {
  * Browse and select models for the current provider
  */
 async function browseModels() {
-  const config = vscode.workspace.getConfiguration();
-  const provider = config.get<string>('llmPair.provider', 'openai');
+  const config = vscode.workspace.getConfiguration('llmPair');
+  const provider = config.get<string>('provider', 'openai');
 
   if (provider === 'ollama') {
     await browseOllamaModels();
@@ -207,9 +207,9 @@ async function browseModels() {
  * Browse and select Ollama models
  */
 async function browseOllamaModels() {
-  const config = vscode.workspace.getConfiguration();
-  const baseUrl = config.get<string>('llmPair.ollama.baseUrl', 'http://localhost:11434');
-  const currentModel = config.get<string>('llmPair.ollama.model', 'codellama:latest');
+  const config = vscode.workspace.getConfiguration('llmPair');
+  const baseUrl = config.get<string>('ollama.baseUrl', 'http://localhost:11434');
+  const currentModel = config.get<string>('ollama.model', 'codellama:latest');
 
   try {
     const ollamaProvider = new OllamaProvider({ baseUrl, model: currentModel });
@@ -233,7 +233,7 @@ async function browseOllamaModels() {
     });
 
     if (selected && selected.label !== currentModel) {
-      await config.update('llmPair.ollama.model', selected.label, vscode.ConfigurationTarget.Global);
+      await config.update('ollama.model', selected.label, vscode.ConfigurationTarget.Global);
       vscode.window.showInformationMessage(`Model switched to ${selected.label}`);
     }
   } catch (error) {
@@ -246,8 +246,8 @@ async function browseOllamaModels() {
  * Browse and select OpenAI models
  */
 async function browseOpenAIModels() {
-  const config = vscode.workspace.getConfiguration();
-  const currentModel = config.get<string>('llmPair.openai.model', 'gpt-4');
+  const config = vscode.workspace.getConfiguration('llmPair');
+  const currentModel = config.get<string>('openai.model', 'gpt-4');
 
   const models = [
     { label: 'gpt-4', description: 'Most capable model' },
@@ -270,7 +270,7 @@ async function browseOpenAIModels() {
   });
 
   if (selected && selected.label !== currentModel) {
-    await config.update('llmPair.openai.model', selected.label, vscode.ConfigurationTarget.Global);
+    await config.update('openai.model', selected.label, vscode.ConfigurationTarget.Global);
     vscode.window.showInformationMessage(`Model switched to ${selected.label}`);
   }
 }
