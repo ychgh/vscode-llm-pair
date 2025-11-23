@@ -71,19 +71,19 @@ export async function activate(context: vscode.ExtensionContext) {
  * Initialize the LLM provider based on configuration
  */
 async function initializeLLMProvider(chatViewProvider: ChatViewProvider) {
-  const config = vscode.workspace.getConfiguration();
-  const provider = config.get<string>('llmPair.provider', 'openai');
+  const config = vscode.workspace.getConfiguration('llmPair');
+  const provider = config.get<string>('provider', 'openai');
 
   outputChannel?.appendLine('=== Configuration Debug ===');
   outputChannel?.appendLine(`Workspace folders: ${JSON.stringify(vscode.workspace.workspaceFolders?.map(f => f.uri.fsPath))}`);
   outputChannel?.appendLine(`Provider: ${provider}`);
-  outputChannel?.appendLine(`Config inspection for 'llmPair.provider': ${JSON.stringify(config.inspect('llmPair.provider'))}`);
+  outputChannel?.appendLine(`Config inspection for 'provider': ${JSON.stringify(config.inspect('provider'))}`);
   outputChannel?.appendLine(`Environment variable VSCODE_LLMPAIR_OPENAI_APIKEY: ${process.env.VSCODE_LLMPAIR_OPENAI_APIKEY ? '[SET]' : '[NOT SET]'}`);
 
   try {
     if (provider === 'openai') {
       // Try config first, then fall back to environment variable for development
-      let apiKey = config.get<string>('llmPair.openai.apiKey');
+      let apiKey = config.get<string>('openai.apiKey');
       
       outputChannel?.appendLine(`API Key from config.get: ${apiKey ? (apiKey === 'update your api-key here' ? '[DEFAULT]' : '[SET]') : '[NOT SET]'}`);
       
@@ -97,12 +97,12 @@ async function initializeLLMProvider(chatViewProvider: ChatViewProvider) {
         outputChannel?.appendLine('✓ Using API key from settings.json');
       }
       
-      const model = config.get<string>('llmPair.openai.model', 'gpt-4');
-      const baseUrl = config.get<string>('llmPair.openai.baseUrl');
+      const model = config.get<string>('openai.model', 'gpt-4');
+      const baseUrl = config.get<string>('openai.baseUrl');
       
-      outputChannel?.appendLine(`API Key inspection: ${JSON.stringify(config.inspect('llmPair.openai.apiKey'))}`);
-      outputChannel?.appendLine(`Model inspection: ${JSON.stringify(config.inspect('llmPair.openai.model'))}`);
-      outputChannel?.appendLine(`BaseUrl inspection: ${JSON.stringify(config.inspect('llmPair.openai.baseUrl'))}`);
+      outputChannel?.appendLine(`API Key inspection: ${JSON.stringify(config.inspect('openai.apiKey'))}`);
+      outputChannel?.appendLine(`Model inspection: ${JSON.stringify(config.inspect('openai.model'))}`);
+      outputChannel?.appendLine(`BaseUrl inspection: ${JSON.stringify(config.inspect('openai.baseUrl'))}`);
       outputChannel?.appendLine(`Final config: apiKey=${apiKey ? '[SET]' : '[NOT SET]'}, model=${model}, baseUrl=${baseUrl || '[DEFAULT]'}`);
 
       if (!apiKey) {
@@ -122,8 +122,8 @@ async function initializeLLMProvider(chatViewProvider: ChatViewProvider) {
       chatViewProvider.setProvider(openaiProvider);
       outputChannel?.appendLine(`LLM Provider initialized: OpenAI (${model})`);
     } else if (provider === 'ollama') {
-      const baseUrl = config.get<string>('llmPair.ollama.baseUrl', 'http://localhost:11434');
-      const model = config.get<string>('llmPair.ollama.model', 'codellama:latest');
+      const baseUrl = config.get<string>('ollama.baseUrl', 'http://localhost:11434');
+      const model = config.get<string>('ollama.model', 'codellama:latest');
 
       outputChannel?.appendLine(`Ollama config: baseUrl=${baseUrl}, model=${model}`);
 
@@ -160,8 +160,13 @@ async function initializeLLMProvider(chatViewProvider: ChatViewProvider) {
  * Select LLM provider via quick pick
  */
 async function selectProvider() {
-  const config = vscode.workspace.getConfiguration();
-  const currentProvider = config.get<string>('llmPair.provider', 'openai');
+  outputChannel?.appendLine('=== selectProvider called ===');
+  
+  const config = vscode.workspace.getConfiguration('llmPair');
+  const currentProvider = config.get<string>('provider', 'openai');
+  
+  outputChannel?.appendLine(`Current provider from config: ${currentProvider}`);
+  outputChannel?.appendLine(`Config inspection: ${JSON.stringify(config.inspect('provider'))}`);
 
   const providers = [
     {
@@ -176,14 +181,42 @@ async function selectProvider() {
     },
   ];
 
+  outputChannel?.appendLine(`Showing provider menu with current selection: ${currentProvider}`);
+
   const selected = await vscode.window.showQuickPick(providers, {
     placeHolder: 'Select LLM Provider',
     title: 'LLM Provider Selection',
   });
 
-  if (selected && selected.value !== currentProvider) {
-    await config.update('llmPair.provider', selected.value, vscode.ConfigurationTarget.Global);
-    vscode.window.showInformationMessage(`Provider switched to ${selected.label}`);
+  if (selected) {
+    outputChannel?.appendLine(`User selected: ${selected.value}`);
+    if (selected.value !== currentProvider) {
+      outputChannel?.appendLine(`Updating provider from ${currentProvider} to ${selected.value}`);
+      
+      // Determine the appropriate configuration target
+      const inspection = config.inspect<string>('provider');
+      let targetScope = vscode.ConfigurationTarget.Global;
+      
+      // If there's a workspace value set, update the workspace configuration
+      // Otherwise, update the global configuration
+      if (inspection?.workspaceValue !== undefined) {
+        targetScope = vscode.ConfigurationTarget.Workspace;
+        outputChannel?.appendLine(`Updating workspace configuration (workspace value exists)`);
+      } else if (inspection?.workspaceFolderValue !== undefined) {
+        targetScope = vscode.ConfigurationTarget.WorkspaceFolder;
+        outputChannel?.appendLine(`Updating workspace folder configuration (workspace folder value exists)`);
+      } else {
+        outputChannel?.appendLine(`Updating global configuration`);
+      }
+      
+      await config.update('provider', selected.value, targetScope);
+      outputChannel?.appendLine(`Provider updated successfully to ${selected.value} in ${targetScope === vscode.ConfigurationTarget.Global ? 'global' : targetScope === vscode.ConfigurationTarget.Workspace ? 'workspace' : 'workspace folder'} scope`);
+      vscode.window.showInformationMessage(`Provider switched to ${selected.label}`);
+    } else {
+      outputChannel?.appendLine(`No change needed, provider is already ${currentProvider}`);
+    }
+  } else {
+    outputChannel?.appendLine(`User cancelled provider selection`);
   }
 }
 
@@ -191,14 +224,22 @@ async function selectProvider() {
  * Browse and select models for the current provider
  */
 async function browseModels() {
-  const config = vscode.workspace.getConfiguration();
-  const provider = config.get<string>('llmPair.provider', 'openai');
+  outputChannel?.appendLine('=== browseModels called ===');
+  
+  const config = vscode.workspace.getConfiguration('llmPair');
+  const provider = config.get<string>('provider', 'openai');
+  
+  outputChannel?.appendLine(`Current provider from config: ${provider}`);
+  outputChannel?.appendLine(`Config inspection: ${JSON.stringify(config.inspect('provider'))}`);
 
   if (provider === 'ollama') {
+    outputChannel?.appendLine(`Browsing Ollama models`);
     await browseOllamaModels();
   } else if (provider === 'openai') {
+    outputChannel?.appendLine(`Browsing OpenAI models`);
     await browseOpenAIModels();
   } else {
+    outputChannel?.appendLine(`Unsupported provider: ${provider}`);
     vscode.window.showWarningMessage(`Model browsing not supported for provider: ${provider}`);
   }
 }
@@ -207,9 +248,9 @@ async function browseModels() {
  * Browse and select Ollama models
  */
 async function browseOllamaModels() {
-  const config = vscode.workspace.getConfiguration();
-  const baseUrl = config.get<string>('llmPair.ollama.baseUrl', 'http://localhost:11434');
-  const currentModel = config.get<string>('llmPair.ollama.model', 'codellama:latest');
+  const config = vscode.workspace.getConfiguration('llmPair');
+  const baseUrl = config.get<string>('ollama.baseUrl', 'http://localhost:11434');
+  const currentModel = config.get<string>('ollama.model', 'codellama:latest');
 
   try {
     const ollamaProvider = new OllamaProvider({ baseUrl, model: currentModel });
@@ -233,7 +274,17 @@ async function browseOllamaModels() {
     });
 
     if (selected && selected.label !== currentModel) {
-      await config.update('llmPair.ollama.model', selected.label, vscode.ConfigurationTarget.Global);
+      // Determine the appropriate configuration target
+      const inspection = config.inspect<string>('ollama.model');
+      let targetScope = vscode.ConfigurationTarget.Global;
+      
+      if (inspection?.workspaceValue !== undefined) {
+        targetScope = vscode.ConfigurationTarget.Workspace;
+      } else if (inspection?.workspaceFolderValue !== undefined) {
+        targetScope = vscode.ConfigurationTarget.WorkspaceFolder;
+      }
+      
+      await config.update('ollama.model', selected.label, targetScope);
       vscode.window.showInformationMessage(`Model switched to ${selected.label}`);
     }
   } catch (error) {
@@ -246,8 +297,8 @@ async function browseOllamaModels() {
  * Browse and select OpenAI models
  */
 async function browseOpenAIModels() {
-  const config = vscode.workspace.getConfiguration();
-  const currentModel = config.get<string>('llmPair.openai.model', 'gpt-4');
+  const config = vscode.workspace.getConfiguration('llmPair');
+  const currentModel = config.get<string>('openai.model', 'gpt-4');
 
   const models = [
     { label: 'gpt-4', description: 'Most capable model' },
@@ -270,7 +321,17 @@ async function browseOpenAIModels() {
   });
 
   if (selected && selected.label !== currentModel) {
-    await config.update('llmPair.openai.model', selected.label, vscode.ConfigurationTarget.Global);
+    // Determine the appropriate configuration target
+    const inspection = config.inspect<string>('openai.model');
+    let targetScope = vscode.ConfigurationTarget.Global;
+    
+    if (inspection?.workspaceValue !== undefined) {
+      targetScope = vscode.ConfigurationTarget.Workspace;
+    } else if (inspection?.workspaceFolderValue !== undefined) {
+      targetScope = vscode.ConfigurationTarget.WorkspaceFolder;
+    }
+    
+    await config.update('openai.model', selected.label, targetScope);
     vscode.window.showInformationMessage(`Model switched to ${selected.label}`);
   }
 }
